@@ -1,8 +1,16 @@
 [package]
-name = "arraybox"
-version = "0.1.0"
 edition = "2021"
+name = "arraybox"
+version = "0.0.1"
+#rust-version = "nightly"
+authors = ["warlock <internalmike@gmail.com>"]
+description = "A box with fixed capacity, backed by a byte array (it can be stored on the stack too). Implements fixed capacity `ArrayBox`."
+readme = "README.md"
+documentation = "https://docs.rs/arraybox/"
+keywords = ["no_std", "stack", "box", "array", "union"]
+categories = ["rust-patterns", "no-std"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/A1-Triard/arraybox"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
+[badges]
+maintenance = { status = "experimental" }
