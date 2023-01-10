@@ -16,7 +16,7 @@ use core::ptr::{self, Pointee, null};
 
 /// # Safety
 ///
-/// This trait cannot be implemented outside of this module.
+/// This trait can be implemented only through unconditional delegating to another implementation.
 #[const_trait]
 pub unsafe trait Buf: Default {
     fn as_ptr(&self) -> *const u8;
