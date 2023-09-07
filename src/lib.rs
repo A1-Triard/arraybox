@@ -2,11 +2,13 @@
 #![feature(const_mut_refs)]
 #![feature(const_ptr_write)]
 #![feature(const_trait_impl)]
+#![feature(effects)]
 #![feature(ptr_metadata)]
 #![feature(unsize)]
 
 #![no_std]
 
+use const_default::ConstDefault;
 use core::borrow::{Borrow, BorrowMut};
 use core::fmt::{self, Debug, Display, Formatter};
 use core::marker::{PhantomData, Unsize};
@@ -18,28 +20,34 @@ use core::ptr::{self, Pointee, null};
 ///
 /// This trait can be implemented only through unconditional delegating to another implementation.
 #[const_trait]
-pub unsafe trait Buf: Default {
+pub unsafe trait Buf: ConstDefault {
     fn as_ptr(&self) -> *const u8;
+
     fn as_mut_ptr(&mut self) -> *mut u8;
+
     fn align() -> usize;
+
     fn len() -> usize;
 }
 
 pub struct BufFor<T>(MaybeUninit<T>);
 
-impl<T> const Default for BufFor<T> {
-    fn default() -> BufFor<T> { BufFor(MaybeUninit::uninit()) }
+impl<T> ConstDefault for BufFor<T> {
+    const DEFAULT: Self = BufFor(MaybeUninit::uninit());
 }
 
 unsafe impl<T> const Buf for BufFor<T> {
     fn as_ptr(&self) -> *const u8 { self.0.as_ptr() as _ }
+
     fn as_mut_ptr(&mut self) -> *mut u8 { self.0.as_mut_ptr() as _ }
+
     fn align() -> usize { align_of::<T>() }
+
     fn len() -> usize { size_of::<T>() }
 }
 
 #[repr(C)]
-pub union Or<T1, T2> {
+pub union AnyOf2<T1, T2> {
     _a: ManuallyDrop<T1>,
     _b: ManuallyDrop<T2>,
 }
@@ -57,12 +65,12 @@ impl<'a, T: ?Sized + 'a, B: Buf> Drop for ArrayBox<'a, T, B> {
 }
 
 impl<'a, T: ?Sized + 'a, B: Buf> ArrayBox<'a, T, B> {
-    pub const fn new<S: Unsize<T>>(source: S) -> Self where B: ~const Buf + ~const Default {
+    pub const fn new<S: Unsize<T>>(source: S) -> Self where B: ~const Buf + ConstDefault {
         assert!(B::align() >= align_of::<S>());
         assert!(B::len() >= size_of::<S>());
         let source_null_ptr: *const T = null::<S>();
         let metadata = source_null_ptr.to_raw_parts().1;
-        let mut res = ArrayBox { buf: B::default(), metadata, phantom: PhantomData };
+        let mut res = ArrayBox { buf: B::DEFAULT, metadata, phantom: PhantomData };
         unsafe { ptr::write(res.buf.as_mut_ptr() as *mut S, source) };
         res
     }
