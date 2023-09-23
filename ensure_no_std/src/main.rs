@@ -13,7 +13,7 @@ mod no_std {
     use exit_no_std::exit;
 
     #[panic_handler]
-    extern fn panic(_info: &PanicInfo) -> ! {
+    fn panic(_info: &PanicInfo) -> ! {
         exit(99)
     }
 }
