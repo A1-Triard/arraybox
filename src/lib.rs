@@ -70,6 +70,7 @@ pub union AnyOf2<T1, T2> {
     _b: ManuallyDrop<T2>,
 }
 
+/// A stack-allocated container that can store dynamically sized types.
 pub struct ArrayBox<'a, T: ?Sized + 'a, B: Buf> {
     buf: B,
     metadata: <T as Pointee>::Metadata,
@@ -83,6 +84,7 @@ impl<'a, T: ?Sized + 'a, B: Buf> Drop for ArrayBox<'a, T, B> {
 }
 
 impl<'a, T: ?Sized + 'a, B: Buf> ArrayBox<'a, T, B> {
+    /// Allocates memory on stack and then places `source` into it as DST `T`.
     pub const fn new<S: Unsize<T>>(mut source: S) -> Self where B: ~const Buf + ConstDefault {
         assert!(B::align() >= align_of::<S>());
         assert!(B::len() >= size_of::<S>());
@@ -92,11 +94,13 @@ impl<'a, T: ?Sized + 'a, B: Buf> ArrayBox<'a, T, B> {
         res
     }
 
+    /// Return raw immutable pointer to the stored object.
     pub fn as_ptr(&self) -> *const T {
         let metadata = self.metadata;
         ptr::from_raw_parts(self.buf.as_ptr() as *const (), metadata)
     }
 
+    /// Return raw mutable pointer to the stored object.
     pub fn as_mut_ptr(&mut self) -> *mut T {
         let metadata = self.metadata;
         ptr::from_raw_parts_mut(self.buf.as_mut_ptr() as *mut (), metadata)
