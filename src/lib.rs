@@ -14,22 +14,32 @@ use core::fmt::{self, Debug, Display, Formatter};
 use core::marker::{PhantomData, Unsize};
 use core::mem::{ManuallyDrop, MaybeUninit, align_of, size_of};
 use core::ops::{Deref, DerefMut};
-use core::ptr::{self, Pointee, null};
+use core::ptr::{self, Pointee};
 
+/// Stack-allocated space.
+///
 /// # Safety
 ///
 /// This trait can be implemented only through unconditional delegating to another implementation.
 #[const_trait]
 pub unsafe trait Buf: ConstDefault {
+    /// Allocated space location as an immutable pointer.
     fn as_ptr(&self) -> *const u8;
 
+    /// Allocated space location as a mutable pointer.
     fn as_mut_ptr(&mut self) -> *mut u8;
 
+    /// Allocated space alignment.
     fn align() -> usize;
 
+    /// Allocated space size.
     fn len() -> usize;
 }
 
+/// Stack-allocated space appropriated to store the specific type.
+///
+/// Appropriated for emplacing types with
+/// size less or equal `size_of::<T>()` and alignment less or equal `align_of::<T>()`.
 pub struct BufFor<T>(MaybeUninit<T>);
 
 impl<T> ConstDefault for BufFor<T> {
@@ -46,6 +56,14 @@ unsafe impl<T> const Buf for BufFor<T> {
     fn len() -> usize { size_of::<T>() }
 }
 
+/// A helper type for creating [`BufFor`] any of two types.
+///
+/// The type satisfies the following properties:
+///
+/// 1. `size_of::<AnyOf2<T1, T2>>() >= size_of::<T1>()`
+/// 2. `size_of::<AnyOf2<T1, T2>>() >= size_of::<T2>()`
+/// 3. `align_of::<AnyOf2<T1, T2>>() >= align_of::<T1>()`
+/// 4. `align_of::<AnyOf2<T1, T2>>() >= align_of::<T2>()`
 #[repr(C)]
 pub union AnyOf2<T1, T2> {
     _a: ManuallyDrop<T1>,
@@ -65,11 +83,10 @@ impl<'a, T: ?Sized + 'a, B: Buf> Drop for ArrayBox<'a, T, B> {
 }
 
 impl<'a, T: ?Sized + 'a, B: Buf> ArrayBox<'a, T, B> {
-    pub const fn new<S: Unsize<T>>(source: S) -> Self where B: ~const Buf + ConstDefault {
+    pub const fn new<S: Unsize<T>>(mut source: S) -> Self where B: ~const Buf + ConstDefault {
         assert!(B::align() >= align_of::<S>());
         assert!(B::len() >= size_of::<S>());
-        let source_null_ptr: *const T = null::<S>();
-        let metadata = source_null_ptr.to_raw_parts().1;
+        let metadata = (&mut source as *mut T).to_raw_parts().1;
         let mut res = ArrayBox { buf: B::DEFAULT, metadata, phantom: PhantomData };
         unsafe { ptr::write(res.buf.as_mut_ptr() as *mut S, source) };
         res
@@ -97,6 +114,7 @@ impl<'a, T: ?Sized + 'a, B: Buf> AsMut<T> for ArrayBox<'a, T, B> {
         unsafe { &mut *self.as_mut_ptr() }
     }
 }
+
 impl<'a, T: ?Sized + 'a, B: Buf> Borrow<T> for ArrayBox<'a, T, B> {
     fn borrow(&self) -> &T { self.as_ref() }
 }
