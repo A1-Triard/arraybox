@@ -6,6 +6,8 @@
 #![feature(ptr_metadata)]
 #![feature(unsize)]
 
+#![allow(incomplete_features)]
+
 #![no_std]
 
 use const_default::ConstDefault;
@@ -90,7 +92,7 @@ impl<'a, T: ?Sized + 'a, B: Buf> ArrayBox<'a, T, B> {
         assert!(B::len() >= size_of::<S>());
         let metadata = (&mut source as *mut T).to_raw_parts().1;
         let mut res = ArrayBox { buf: B::DEFAULT, metadata, phantom: PhantomData };
-        unsafe { ptr::write(res.buf.as_mut_ptr() as *mut S, source) };
+        unsafe { ptr::write::<S>(res.buf.as_mut_ptr() as *mut S, source) };
         res
     }
 
