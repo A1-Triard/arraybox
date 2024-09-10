@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "arraybox"
-version = "0.1.1"
+version = "0.1.2"
 #rust-version = "nightly"
 authors = ["warlock <internalmike@gmail.com>"]
 description = "A box with fixed capacity, backed by a byte array (it can be stored on the stack too). Implements fixed capacity `ArrayBox`."
@@ -14,6 +14,3 @@ repository = "https://github.com/A1-Triard/arraybox"
 
 [badges]
 maintenance = { status = "experimental" }
-
-[dependencies]
-const-default = "1.0.0"
