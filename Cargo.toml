@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "arraybox"
-version = "0.1.2"
+version = "0.1.3"
 #rust-version = "nightly"
 authors = ["warlock <internalmike@gmail.com>"]
 description = "A box with fixed capacity, backed by a byte array (it can be stored on the stack too). Implements fixed capacity `ArrayBox`."
