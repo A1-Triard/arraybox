@@ -16,9 +16,12 @@ mod no_std {
     fn panic(_info: &PanicInfo) -> ! {
         exit(99)
     }
+
+    #[no_mangle]
+    extern fn rust_eh_personality() { }
 }
 
-use arraybox::{ArrayBox, BufFor};
+use arraybox::ArrayBox;
 
 trait Int {
     fn value(&self) -> i32;
@@ -32,7 +35,7 @@ impl Int for IntValue {
 
 #[start]
 pub fn main(_argc: isize, _argv: *const *const u8) -> isize {
-    let a: ArrayBox<'static, dyn Int, BufFor<IntValue>> = ArrayBox::new(IntValue(7i32));
+    let a: ArrayBox<'static, dyn Int, IntValue> = ArrayBox::new(IntValue(7i32));
     assert_eq!(a.value(), 7i32);
     0
 }
