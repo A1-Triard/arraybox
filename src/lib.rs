@@ -1,7 +1,3 @@
-#![feature(const_maybe_uninit_as_mut_ptr)]
-#![feature(const_mut_refs)]
-#![feature(const_ptr_write)]
-#![feature(const_trait_impl)]
 #![feature(ptr_metadata)]
 #![feature(unsize)]
 
